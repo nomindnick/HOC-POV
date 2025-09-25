@@ -3,10 +3,10 @@
 ## Overview
 This document tracks the implementation progress of the Hero of Kindness CPRA Filter application, providing detailed context for completed work and guidance for upcoming sprints.
 
-## Project Status: Sprint 2 Complete ✅
+## Project Status: Sprint 3 Complete ✅
 **Last Updated**: September 25, 2025
-**Current Sprint**: 2 of 16
-**Overall Progress**: ~12% (Database Layer Complete)
+**Current Sprint**: 3 of 16
+**Overall Progress**: ~19% (Email Ingestion Complete)
 
 ---
 
@@ -128,19 +128,49 @@ Tooling:
 
 ---
 
-### Sprint 3: Email Ingestion Pipeline (NEXT)
-**Estimated Duration**: 1-2 hours
-**Dependencies**: Sprint 2 (Database) ✅
+### Sprint 3: Email Ingestion Pipeline ✅
+**Completed**: September 25, 2025
+**Duration**: 45 minutes
 
-#### Context from Sprint 1
-- python-multipart already installed for file uploads
-- Frontend has react-dropzone ready for drag-and-drop
+#### What Was Built
+- **Email Parser Utility** (`backend/utils/email_parser.py`)
+  - RFC-822 header parsing (Subject, From, To, Date)
+  - Flexible date format handling (12+ formats supported)
+  - SHA-256 hash generation for deduplication
+  - Handles emails with missing or malformed headers
+- **Ingestion API Endpoints** (`backend/api/ingest.py`)
+  - `POST /api/ingest/` - Multi-file upload endpoint
+  - `POST /api/ingest/text` - Direct text content upload
+  - `GET /api/ingest/validate` - File validation endpoint
+  - Project creation/selection support
+  - Batch processing with duplicate detection
+- **Sample Test Files** (10 emails in `tests/sample_emails/`)
+  - Responsive: lead in water, mold inspection, asbestos abatement
+  - Non-responsive: lead teacher, leadership meeting, pencil lead
+  - Edge cases: mixed context, missing headers
+  - Environmental hazards: HVAC issues, pesticide application
+- **Comprehensive Tests** (`tests/test_ingest.py`)
+  - Email parser tests
+  - Date format parsing tests
+  - Single and bulk upload tests
+  - Duplicate detection verification
+  - Edge case handling
 
-#### Key Implementation Notes
-1. **Email Format**: Plain text with RFC-822 headers
-2. **Parsing Logic**: Extract Subject, From, To, Date headers
-3. **Deduplication**: SHA-256 hashing of content
-4. **Batch Processing**: Handle multiple files efficiently
+#### Key Decisions Made
+1. **File Format**: Plain .txt files with RFC-822 headers for simplicity
+2. **SHA-256 Deduplication**: Automatic hash generation if not provided
+3. **Project Management**: Auto-create projects with timestamps if not specified
+4. **Error Handling**: Graceful handling of malformed emails and missing headers
+5. **Batch Processing**: Using existing `bulk_create_emails` for efficiency
+
+#### Verification Performed
+- ✅ All 7 test categories passing
+- ✅ Email parser correctly extracts headers
+- ✅ 12+ date formats successfully parsed
+- ✅ Duplicate detection working via SHA-256
+- ✅ Bulk upload handles 5+ files efficiently
+- ✅ API endpoints accessible via Swagger UI
+- ✅ Edge cases (no headers) handled gracefully
 
 ---
 
@@ -257,7 +287,7 @@ npm install package-name
 |--------|-----------------|-----------------|---------|-------|
 | 1 | 1 hour | 1 hour | ✅ Complete | Foundation established |
 | 2 | 1-2 hours | 1 hour | ✅ Complete | Database layer complete |
-| 3 | 1-2 hours | - | 📋 Planned | Email ingestion |
+| 3 | 1-2 hours | 45 minutes | ✅ Complete | Email ingestion working |
 | 4 | 1 hour | - | 📋 Planned | Ollama integration |
 | 5 | 1-2 hours | - | 📋 Planned | Prompt templates |
 | 6 | 2 hours | - | 📋 Planned | Classification API |
@@ -273,7 +303,7 @@ npm install package-name
 | 16 | 1-2 hours | - | 📋 Planned | Documentation |
 
 **Total Estimated**: 20-28 hours
-**Completed**: ~2 hours (7-10%)
+**Completed**: ~2.75 hours (10-14%)
 
 ---
 
@@ -314,9 +344,11 @@ cd frontend && npm run lint
 ### API Endpoints (Current)
 - `GET /` - Root endpoint
 - `GET /api/health` - Health check
+- `POST /api/ingest/` - Upload email files
+- `POST /api/ingest/text` - Upload email as text
+- `GET /api/ingest/validate` - Validate filenames
 
 ### API Endpoints (Planned)
-- `POST /api/ingest` - Upload emails
 - `POST /api/classify/start` - Start classification
 - `GET /api/classify/status` - Check progress
 - `GET /api/emails` - List emails
@@ -327,18 +359,18 @@ cd frontend && npm run lint
 
 ## Notes for Next Developer/Session
 
-1. **Sprint 3 is ready to start** - Database layer is complete and tested
-2. **Database initialized** - SQLite database created at `data/projects/db.sqlite`
-3. **All CRUD operations tested** - 30 unit tests passing
-4. **Backend auto-initializes DB** - Database tables created on startup
-5. **SHA-256 deduplication working** - Ready for email ingestion
+1. **Sprint 3 complete** - Email ingestion fully functional
+2. **Database working** - SQLite database with projects, emails, and classifications
+3. **Ingestion API tested** - All endpoints working with duplicate detection
+4. **10 sample emails created** - Various scenarios for testing
+5. **Ready for LLM integration** - Sprint 4 (Ollama) is next
 
 ### Recommended Next Steps
-1. Start Sprint 3 (Email Ingestion) - Database foundation is ready
-2. Create sample .txt email files with RFC-822 headers for testing
-3. Implement the `/api/ingest` endpoint using existing CRUD operations
-4. Test bulk upload with duplicate detection
-5. Consider adding database migration support for future schema changes
+1. Start Sprint 4 (Ollama Client) - Email ingestion is ready
+2. Check that Ollama is running (`ollama list`)
+3. Implement the Ollama client wrapper for model discovery
+4. Test with available models (gemma3:4b, phi4-mini, qwen2.5)
+5. Consider implementing Sprint 5 (prompts) immediately after
 
 ---
 

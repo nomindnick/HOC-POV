@@ -1,0 +1,3 @@
+This is an email without proper headers. Sometimes emails get corrupted or are exported incorrectly.
+
+The system found high levels of radon in the basement of the science building during

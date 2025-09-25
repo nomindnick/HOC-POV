@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from backend.config import settings
 from backend.db.base import db
+from backend.api import ingest
 
 # Create FastAPI app
 app = FastAPI(
@@ -54,6 +55,9 @@ async def startup_event():
     print(f"🗄️ Initializing database...")
     db.init_db()
     print(f"✅ Database initialized successfully")
+
+# Include routers
+app.include_router(ingest.router)
 
 
 @app.on_event("shutdown")
