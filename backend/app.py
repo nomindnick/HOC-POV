@@ -3,7 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from backend.config import settings
 from backend.db.base import db
-from backend.api import ingest
+from backend.api import ingest, models
+from backend.llm.client import ollama_client
 
 # Create FastAPI app
 app = FastAPI(
@@ -35,11 +36,15 @@ async def root():
 @app.get(f"{settings.api_v1_str}/health")
 async def health_check():
     """Health check endpoint for monitoring application status"""
+    # Check Ollama availability
+    ollama_available = await ollama_client.health_check()
+
     return {
         "status": "ok",
         "timestamp": datetime.utcnow().isoformat(),
         "service": "cpra-filter-backend",
-        "version": "1.0.0"
+        "version": "1.0.0",
+        "ollama": ollama_available
     }
 
 
@@ -58,6 +63,7 @@ async def startup_event():
 
 # Include routers
 app.include_router(ingest.router)
+app.include_router(models.router)
 
 
 @app.on_event("shutdown")

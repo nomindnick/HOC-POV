@@ -3,10 +3,10 @@
 ## Overview
 This document tracks the implementation progress of the Hero of Kindness CPRA Filter application, providing detailed context for completed work and guidance for upcoming sprints.
 
-## Project Status: Sprint 3 Complete ✅
+## Project Status: Sprint 4 Complete ✅
 **Last Updated**: September 25, 2025
-**Current Sprint**: 3 of 16
-**Overall Progress**: ~19% (Email Ingestion Complete)
+**Current Sprint**: 4 of 16
+**Overall Progress**: ~25% (Ollama Integration Complete)
 
 ---
 
@@ -174,23 +174,43 @@ Tooling:
 
 ---
 
-### Sprint 4: Ollama Client & Model Discovery
-**Estimated Duration**: 1 hour
-**Dependencies**: None (can be done anytime)
+### Sprint 4: Ollama Client & Model Discovery ✅
+**Completed**: September 25, 2025
+**Duration**: 30 minutes
 
-#### Available Models on System
-```
-- gemma3:4b (3.3 GB)
-- phi4-mini:3.8b (2.5 GB)
-- qwen3:8b (5.2 GB)
-- llama3:8b-instruct-q5_K_M (5.7 GB)
-```
+#### What Was Built
+- **Ollama Client Wrapper** (`backend/llm/client.py`)
+  - Async `OllamaClient` class with health check, list models, and generate methods
+  - Model caching with 5-minute TTL to reduce API calls
+  - Graceful error handling for offline Ollama scenarios
+  - Support for JSON-formatted responses
+  - Human-readable size formatting for models
+- **Model Discovery API** (`backend/api/models.py`)
+  - `GET /api/models/` - List available models with size and details
+  - `GET /api/models/recommended` - Get recommended models with availability status
+  - `POST /api/models/refresh` - Force refresh model cache
+  - Graceful degradation when Ollama is offline
+- **Comprehensive Tests** (`tests/test_ollama.py`)
+  - 13 unit tests covering all scenarios
+  - Mock-based testing for reliability
+  - Tests for caching, error handling, and offline behavior
+- **Health Check Enhancement**
+  - Added Ollama status to `/api/health` endpoint
 
-#### Implementation Notes
-1. **Ollama API**: Available at `localhost:11434`
-2. **httpx**: Already installed for async HTTP calls
-3. **Model Discovery**: `/api/tags` endpoint
-4. **Generation**: `/api/generate` endpoint
+#### Key Decisions Made
+1. **5-minute cache TTL**: Balance between freshness and performance
+2. **Sorted model list**: Models sorted by size (smallest first) for better UX
+3. **Recommended models**: Curated list with availability checking
+4. **Async throughout**: All methods use async/await for non-blocking operations
+5. **Graceful errors**: Returns empty model list with error message when offline
+
+#### Verification Performed
+- ✅ All 13 unit tests passing
+- ✅ `/api/models/` returns 19 available models
+- ✅ `/api/models/recommended` correctly identifies available models
+- ✅ `/api/models/refresh` successfully clears cache
+- ✅ Health endpoint shows `"ollama": true` when running
+- ✅ Error handling works gracefully (tested via unit tests)
 
 ---
 
@@ -288,7 +308,7 @@ npm install package-name
 | 1 | 1 hour | 1 hour | ✅ Complete | Foundation established |
 | 2 | 1-2 hours | 1 hour | ✅ Complete | Database layer complete |
 | 3 | 1-2 hours | 45 minutes | ✅ Complete | Email ingestion working |
-| 4 | 1 hour | - | 📋 Planned | Ollama integration |
+| 4 | 1 hour | 30 minutes | ✅ Complete | Ollama integration working |
 | 5 | 1-2 hours | - | 📋 Planned | Prompt templates |
 | 6 | 2 hours | - | 📋 Planned | Classification API |
 | 7 | 2 hours | - | 📋 Planned | Process page UI |
@@ -303,7 +323,7 @@ npm install package-name
 | 16 | 1-2 hours | - | 📋 Planned | Documentation |
 
 **Total Estimated**: 20-28 hours
-**Completed**: ~2.75 hours (10-14%)
+**Completed**: ~3.25 hours (12-16%)
 
 ---
 
@@ -343,10 +363,13 @@ cd frontend && npm run lint
 
 ### API Endpoints (Current)
 - `GET /` - Root endpoint
-- `GET /api/health` - Health check
+- `GET /api/health` - Health check (includes Ollama status)
 - `POST /api/ingest/` - Upload email files
 - `POST /api/ingest/text` - Upload email as text
 - `GET /api/ingest/validate` - Validate filenames
+- `GET /api/models/` - List available LLM models
+- `GET /api/models/recommended` - Get recommended models
+- `POST /api/models/refresh` - Refresh model cache
 
 ### API Endpoints (Planned)
 - `POST /api/classify/start` - Start classification
@@ -359,18 +382,18 @@ cd frontend && npm run lint
 
 ## Notes for Next Developer/Session
 
-1. **Sprint 3 complete** - Email ingestion fully functional
-2. **Database working** - SQLite database with projects, emails, and classifications
-3. **Ingestion API tested** - All endpoints working with duplicate detection
-4. **10 sample emails created** - Various scenarios for testing
-5. **Ready for LLM integration** - Sprint 4 (Ollama) is next
+1. **Sprint 4 complete** - Ollama integration fully functional
+2. **LLM client working** - Async client with caching and error handling
+3. **Model discovery API** - Lists models, recommends suitable ones
+4. **19 models available** - Including gemma3, phi4-mini, qwen3, llama3
+5. **Ready for prompt engineering** - Sprint 5 (prompt templates) is next
 
 ### Recommended Next Steps
-1. Start Sprint 4 (Ollama Client) - Email ingestion is ready
-2. Check that Ollama is running (`ollama list`)
-3. Implement the Ollama client wrapper for model discovery
-4. Test with available models (gemma3:4b, phi4-mini, qwen2.5)
-5. Consider implementing Sprint 5 (prompts) immediately after
+1. Start Sprint 5 (Prompt Templates) - Ollama client is ready
+2. Create few-shot examples for "lead" disambiguation
+3. Implement prompt builder with version tracking
+4. Test generation with JSON output format
+5. Consider implementing Sprint 6 (classification) immediately after
 
 ---
 
