@@ -1,0 +1,160 @@
+{
+  "version": "1.0",
+  "system": "You are a careful legal assistant helping classify emails for a California Public Records Act (CPRA) request regarding environmental hazards and building-system conditions at K-12 schools and district facilities.\n\nYour task is to determine whether an email meaningfully discusses or pertains to environmental conditions such as:\n- Mold (inspection, testing, remediation, moisture intrusion)\n- Lead (water testing, plumbing maintenance, paint/glazing - NOT \"lead teacher\" or \"leadership\")\n- Asbestos (inspection, abatement, management, monitoring)\n- Other environmental hazards (radon, PCBs, pesticides, VOCs, indoor air quality)\n- Building and infrastructure systems (HVAC, roofing, windows, drainage)\n- Funding and remediation plans for environmental issues\n\nBe very careful to avoid false positives where words like \"lead\" mean \"leadership,\" \"lead teacher,\" \"lead time,\" or other unrelated senses.\n\nOutput your classification as valid JSON matching the provided schema.",
+  "output_schema": {
+    "responsive": {
+      "type": "boolean",
+      "description": "True if email is responsive to CPRA request"
+    },
+    "confidence": {
+      "type": "number",
+      "description": "Confidence score between 0.0 and 1.0",
+      "minimum": 0.0,
+      "maximum": 1.0
+    },
+    "reason": {
+      "type": "string",
+      "description": "Brief explanation (max 200 chars)",
+      "maxLength": 200
+    },
+    "labels": {
+      "type": "array",
+      "description": "List of relevant environmental hazard labels",
+      "items": {"type": "string"}
+    }
+  },
+  "examples": [
+    {
+      "subject": "RE: Fountain water test results - Rm 12",
+      "from": "jsmith@schooldistrict.edu",
+      "body": "I wanted to follow up on the water testing we conducted last week. The lab results came back and they found 19 ppb lead in the east hallway fountain near Room 12. This exceeds the EPA action level of 15 ppb. We need to take immediate action: shut off the fountain, post warning signs, provide bottled water, and schedule remediation.",
+      "output": {
+        "responsive": true,
+        "confidence": 0.95,
+        "reason": "Discusses lead contamination in drinking water exceeding EPA limits, requiring immediate remediation",
+        "labels": ["lead", "water", "testing", "remediation"]
+      }
+    },
+    {
+      "subject": "Hiring a lead teacher for 2nd grade",
+      "from": "principal@elementary.edu",
+      "body": "We're excited to move forward with hiring Ms. Sarah Johnson as our new lead teacher for the 2nd grade classroom. She has excellent leadership skills and will be a great mentor to our junior teachers. Please find the offer letter draft attached. The position will start on February 1st.",
+      "output": {
+        "responsive": false,
+        "confidence": 0.94,
+        "reason": "'Lead' refers to leadership role, not environmental hazard. This is about hiring personnel.",
+        "labels": []
+      }
+    },
+    {
+      "subject": "Mold discovered in Room 105 ceiling",
+      "from": "custodian@school.edu",
+      "body": "During routine inspection, I found significant black mold growth on the ceiling tiles in Room 105. The area is approximately 4 square feet and appears to be from a roof leak. I've cordoned off the area and notified maintenance. We should schedule professional mold testing and remediation ASAP. The classroom should remain closed until cleared.",
+      "output": {
+        "responsive": true,
+        "confidence": 0.92,
+        "reason": "Reports mold discovery requiring testing and professional remediation, includes moisture intrusion",
+        "labels": ["mold", "testing", "remediation", "moisture", "roofing"]
+      }
+    },
+    {
+      "subject": "Leadership team meeting agenda",
+      "from": "superintendent@district.edu",
+      "body": "Please join us for the monthly leadership meeting where we'll discuss: 1) Budget allocations for next year, 2) New curriculum standards, 3) Teacher professional development plans, 4) Student achievement data review. All lead teachers and department heads should attend.",
+      "output": {
+        "responsive": false,
+        "confidence": 0.91,
+        "reason": "Administrative meeting about curriculum and budgets. 'Lead' and 'leadership' refer to roles, not hazards.",
+        "labels": []
+      }
+    },
+    {
+      "subject": "Asbestos abatement project - Building C",
+      "from": "facilities@district.edu",
+      "body": "The certified asbestos contractor will begin abatement work in Building C on Monday. All floor tiles in the east wing contain asbestos and must be removed following EPA RRP protocols. Air monitoring will be conducted throughout the project. Building will be sealed and negative pressure maintained. Expected completion: 2 weeks.",
+      "output": {
+        "responsive": true,
+        "confidence": 0.96,
+        "reason": "Detailed asbestos abatement project following EPA protocols with air monitoring",
+        "labels": ["asbestos", "abatement", "monitoring", "EPA"]
+      }
+    },
+    {
+      "subject": "Lead paint concern from parent",
+      "from": "concernedparent@email.com",
+      "body": "I'm writing to express my concern about peeling paint I noticed in my daughter's classroom (Room 203). Given the age of the building (built in 1965), I'm worried this might be lead-based paint. Has the school tested for lead paint? I spoke with the lead counselor about my concerns, but she referred me to you since this is a facilities issue.",
+      "output": {
+        "responsive": true,
+        "confidence": 0.67,
+        "reason": "Parent inquiry about potential lead paint hazard, despite mention of 'lead counselor' (role)",
+        "labels": ["lead", "paint", "testing"]
+      }
+    },
+    {
+      "subject": "HVAC system failure in gym",
+      "from": "maintenance@school.edu",
+      "body": "The main HVAC unit for the gymnasium has failed completely. The system is 20 years old and has been leaking refrigerant. Indoor air quality is compromised with no ventilation. We need emergency replacement to prevent mold growth from humidity buildup. Quotes attached from three contractors.",
+      "output": {
+        "responsive": true,
+        "confidence": 0.88,
+        "reason": "HVAC failure affecting indoor air quality and potential mold risk from humidity",
+        "labels": ["HVAC", "IAQ", "ventilation", "mold"]
+      }
+    },
+    {
+      "subject": "Question about pencil lead safety",
+      "from": "teacher@elementary.edu",
+      "body": "A parent asked me if the lead in pencils is toxic. I explained that pencils actually contain graphite, not lead metal, and are non-toxic. However, she's still concerned. Could you send her some information to reassure her? This came up during our unit on writing tools.",
+      "output": {
+        "responsive": false,
+        "confidence": 0.85,
+        "reason": "Discussion about pencil graphite, not environmental lead hazard. Educational context only.",
+        "labels": []
+      }
+    },
+    {
+      "subject": "Window replacement project update",
+      "from": "contractor@construction.com",
+      "body": "Phase 1 of window replacement is complete. All old single-pane windows containing lead glazing compound have been safely removed and disposed of per regulations. New energy-efficient windows installed. During removal, we discovered some asbestos-containing caulk which was properly abated. Phase 2 begins next week.",
+      "output": {
+        "responsive": true,
+        "confidence": 0.91,
+        "reason": "Window project involving lead glazing removal and asbestos caulk abatement",
+        "labels": ["lead", "asbestos", "windows", "abatement"]
+      }
+    },
+    {
+      "subject": "Pesticide application scheduled",
+      "from": "pestcontrol@service.com",
+      "body": "As per our contract, we will apply pesticides for ant control around the cafeteria on Friday after hours. We'll use EPA-approved products safe for schools. Posted notices will go up 48 hours in advance. All food surfaces will be covered. The treated areas will be safe for re-entry Monday morning.",
+      "output": {
+        "responsive": true,
+        "confidence": 0.84,
+        "reason": "Scheduled pesticide application at school facility with safety protocols",
+        "labels": ["pesticides", "EPA", "chemicals"]
+      }
+    },
+    {
+      "subject": "Lead time for new computers",
+      "from": "it@district.edu",
+      "body": "The lead time for the new computer lab equipment is 6-8 weeks from order placement. We need to submit the purchase order by March 1st to have everything installed before the next school year. This timeline leads us to recommend ordering immediately.",
+      "output": {
+        "responsive": false,
+        "confidence": 0.93,
+        "reason": "'Lead time' refers to delivery schedule for IT equipment, not environmental hazards",
+        "labels": []
+      }
+    },
+    {
+      "subject": "Radon test results for basement",
+      "from": "environmental@testing.com",
+      "body": "Radon testing in the basement computer lab shows levels of 5.2 pCi/L, above the EPA action level of 4.0 pCi/L. We recommend installing a sub-slab depressurization system to reduce radon levels. Attached is our detailed report and mitigation proposal. The area should have increased ventilation until mitigation is complete.",
+      "output": {
+        "responsive": true,
+        "confidence": 0.94,
+        "reason": "Radon levels exceeding EPA limits requiring mitigation system installation",
+        "labels": ["radon", "testing", "EPA", "ventilation", "mitigation"]
+      }
+    }
+  ]
+}

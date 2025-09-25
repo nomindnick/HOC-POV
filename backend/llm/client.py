@@ -52,7 +52,7 @@ class OllamaClient:
     def __init__(
         self,
         base_url: str = "http://localhost:11434",
-        timeout: float = 30.0
+        timeout: float = 60.0  # Increased default timeout for generation
     ):
         self.base_url = base_url
         self.timeout = timeout
