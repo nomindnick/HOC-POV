@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from backend.config import settings
+from backend.db.base import db
 
 # Create FastAPI app
 app = FastAPI(
@@ -48,6 +49,11 @@ async def startup_event():
     print(f"📁 Data directory: {settings.data_dir}")
     print(f"🔗 API available at: http://{settings.backend_host}:{settings.backend_port}")
     print(f"🎨 Frontend expected at: {settings.frontend_url}")
+
+    # Initialize database
+    print(f"🗄️ Initializing database...")
+    db.init_db()
+    print(f"✅ Database initialized successfully")
 
 
 @app.on_event("shutdown")

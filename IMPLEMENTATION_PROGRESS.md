@@ -3,10 +3,10 @@
 ## Overview
 This document tracks the implementation progress of the Hero of Kindness CPRA Filter application, providing detailed context for completed work and guidance for upcoming sprints.
 
-## Project Status: Sprint 1 Complete ✅
+## Project Status: Sprint 2 Complete ✅
 **Last Updated**: September 25, 2025
-**Current Sprint**: 1 of 16
-**Overall Progress**: ~6% (Foundation Complete)
+**Current Sprint**: 2 of 16
+**Overall Progress**: ~12% (Database Layer Complete)
 
 ---
 
@@ -84,39 +84,53 @@ Tooling:
 
 ## Upcoming Sprints
 
-### Sprint 2: Database Schema & Models (NEXT)
-**Estimated Duration**: 1-2 hours
-**Priority**: HIGH
+### Sprint 2: Database Schema & Models ✅
+**Completed**: September 25, 2025
+**Duration**: 1 hour
 
-#### Prerequisites from Sprint 1
-- ✅ Backend structure in place
-- ✅ SQLModel installed (v0.0.14)
-- ✅ Pydantic configured (v2.5.0)
+#### What Was Built
+- **Database Schema**: Complete SQLModel entities for all tables
+  - Project: Multi-project support with JSON config
+  - Email: Document storage with SHA-256 deduplication
+  - Classification: LLM predictions with confidence and labels
+  - Review: Human overrides and attorney notes
+  - Sampling & SamplingItem: Statistical QA tracking
+  - ClassificationRun: Run management and progress tracking
+- **Database Connection**: SQLite with session management
+  - Connection pooling configured
+  - Auto-initialization on startup
+  - Located at `data/projects/db.sqlite`
+- **CRUD Operations**: Complete set for all entities
+  - Bulk operations for efficiency
+  - Duplicate detection via SHA-256
+  - Query helpers for common operations
+  - Transaction support
+- **Comprehensive Tests**: 30 unit tests all passing
+  - Entity creation and relationships
+  - Duplicate detection
+  - JSON field handling
+  - Edge cases and error handling
 
-#### Key Implementation Notes
-1. **Database Location**: Will use SQLite in `data/projects/` directory
-2. **Schema Design**:
-   - Project table for multi-project support
-   - Email table with SHA-256 deduplication
-   - Classification table for LLM results
-   - Review table for human overrides
-   - Sampling tables for QA
-3. **Important Considerations**:
-   - Use JSON fields for flexible metadata storage
-   - Add proper indexes for performance
-   - Implement soft deletes where appropriate
+#### Key Decisions Made
+1. **JSON Fields**: Used for flexible metadata and configuration
+2. **SHA-256 Deduplication**: Automatic hash generation if not provided
+3. **Proper Indexes**: Added for performance on key fields
+4. **Method Names**: Changed property to methods (get_metadata/set_metadata) to avoid SQLModel conflicts
+5. **Truncation**: Automatic truncation of reason field to 200 chars
 
-#### Files to Create/Modify
-- `backend/db/schema.py` - SQLModel entities
-- `backend/db/base.py` - Database connection
-- `backend/db/crud.py` - CRUD operations
-- `tests/unit/test_db.py` - Database tests
+#### Verification Performed
+- ✅ All 30 unit tests passing
+- ✅ Database file created on startup
+- ✅ SHA-256 duplicate detection working
+- ✅ JSON fields storing and retrieving correctly
+- ✅ Relationships between tables functioning
+- ✅ Backend initializes database on startup
 
 ---
 
-### Sprint 3: Email Ingestion Pipeline
+### Sprint 3: Email Ingestion Pipeline (NEXT)
 **Estimated Duration**: 1-2 hours
-**Dependencies**: Sprint 2 (Database)
+**Dependencies**: Sprint 2 (Database) ✅
 
 #### Context from Sprint 1
 - python-multipart already installed for file uploads
@@ -242,7 +256,7 @@ npm install package-name
 | Sprint | Planned Duration | Actual Duration | Status | Notes |
 |--------|-----------------|-----------------|---------|-------|
 | 1 | 1 hour | 1 hour | ✅ Complete | Foundation established |
-| 2 | 1-2 hours | - | 🔄 Next | Database schema |
+| 2 | 1-2 hours | 1 hour | ✅ Complete | Database layer complete |
 | 3 | 1-2 hours | - | 📋 Planned | Email ingestion |
 | 4 | 1 hour | - | 📋 Planned | Ollama integration |
 | 5 | 1-2 hours | - | 📋 Planned | Prompt templates |
@@ -259,7 +273,7 @@ npm install package-name
 | 16 | 1-2 hours | - | 📋 Planned | Documentation |
 
 **Total Estimated**: 20-28 hours
-**Completed**: ~1 hour (3.5-5%)
+**Completed**: ~2 hours (7-10%)
 
 ---
 
@@ -313,18 +327,18 @@ cd frontend && npm run lint
 
 ## Notes for Next Developer/Session
 
-1. **Sprint 2 is ready to start** - Database schema is well-defined in specification
-2. **Ollama is working** - Multiple models available, can test with any
-3. **Frontend proxy verified** - API calls work correctly through Vite proxy
-4. **All dependencies installed** - Both Python and Node packages ready
-5. **GitHub repository active** - Can push updates directly
+1. **Sprint 3 is ready to start** - Database layer is complete and tested
+2. **Database initialized** - SQLite database created at `data/projects/db.sqlite`
+3. **All CRUD operations tested** - 30 unit tests passing
+4. **Backend auto-initializes DB** - Database tables created on startup
+5. **SHA-256 deduplication working** - Ready for email ingestion
 
 ### Recommended Next Steps
-1. Start Sprint 2 immediately - Database is foundation for everything else
-2. Create sample .txt email files for testing in Sprint 3
-3. Test Ollama API manually to understand response format
-4. Consider adding ESLint configuration for frontend
-5. Set up pre-commit hooks for code quality
+1. Start Sprint 3 (Email Ingestion) - Database foundation is ready
+2. Create sample .txt email files with RFC-822 headers for testing
+3. Implement the `/api/ingest` endpoint using existing CRUD operations
+4. Test bulk upload with duplicate detection
+5. Consider adding database migration support for future schema changes
 
 ---
 
