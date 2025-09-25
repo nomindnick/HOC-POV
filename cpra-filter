@@ -1,0 +1,199 @@
+#!/usr/bin/env python
+"""
+CPRA Filter CLI - Command line interface for the Hero of Kindness CPRA Filter application
+"""
+
+import os
+import sys
+import time
+import subprocess
+import webbrowser
+import signal
+import argparse
+from pathlib import Path
+
+# Project root directory
+PROJECT_ROOT = Path(__file__).resolve().parent
+VENV_PATH = PROJECT_ROOT / ".venv"
+BACKEND_PATH = PROJECT_ROOT / "backend"
+FRONTEND_PATH = PROJECT_ROOT / "frontend"
+
+
+def check_dependencies():
+    """Check if all required dependencies are installed"""
+    errors = []
+
+    # Check Python
+    try:
+        subprocess.run(["python", "--version"], capture_output=True, check=True)
+    except:
+        errors.append("Python 3.11+ is required")
+
+    # Check Node.js
+    try:
+        subprocess.run(["node", "--version"], capture_output=True, check=True)
+    except:
+        errors.append("Node.js 18+ is required")
+
+    # Check Ollama
+    try:
+        result = subprocess.run(["ollama", "list"], capture_output=True)
+        if result.returncode != 0:
+            errors.append("Ollama is not running. Please start Ollama first.")
+    except:
+        errors.append("Ollama is not installed. Please install Ollama from https://ollama.ai")
+
+    # Check virtual environment
+    if not VENV_PATH.exists():
+        errors.append(f"Virtual environment not found. Run 'python -m venv {VENV_PATH}'")
+
+    # Check frontend dependencies
+    if not (FRONTEND_PATH / "node_modules").exists():
+        errors.append("Frontend dependencies not installed. Run 'cd frontend && npm install'")
+
+    return errors
+
+
+def start_services(production=False):
+    """Start backend and frontend services"""
+    processes = []
+
+    try:
+        # Start backend
+        print("🚀 Starting backend server...")
+        if sys.platform == "win32":
+            backend_cmd = [str(VENV_PATH / "Scripts" / "python"), "-m", "backend.app"]
+        else:
+            backend_cmd = [str(VENV_PATH / "bin" / "python"), "-m", "backend.app"]
+
+        backend_proc = subprocess.Popen(
+            backend_cmd,
+            cwd=PROJECT_ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        processes.append(backend_proc)
+
+        # Wait for backend to start
+        time.sleep(2)
+
+        # Start frontend
+        print("🎨 Starting frontend server...")
+        if production:
+            # In production mode, build and serve
+            subprocess.run(["npm", "run", "build"], cwd=FRONTEND_PATH, check=True)
+            frontend_cmd = ["npm", "run", "preview"]
+        else:
+            frontend_cmd = ["npm", "run", "dev"]
+
+        frontend_proc = subprocess.Popen(
+            frontend_cmd,
+            cwd=FRONTEND_PATH,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        processes.append(frontend_proc)
+
+        # Wait for frontend to start
+        time.sleep(3)
+
+        # Open browser
+        print("🌐 Opening browser...")
+        webbrowser.open("http://localhost:5173")
+
+        print("\n✅ CPRA Filter is running!")
+        print("📊 Backend: http://localhost:8000")
+        print("🖥️  Frontend: http://localhost:5173")
+        print("\nPress Ctrl+C to stop all services\n")
+
+        # Wait for interrupt
+        for proc in processes:
+            proc.wait()
+
+    except KeyboardInterrupt:
+        print("\n\n⚠️  Shutting down services...")
+        for proc in processes:
+            proc.terminate()
+            proc.wait()
+        print("👋 Services stopped")
+        sys.exit(0)
+    except Exception as e:
+        print(f"❌ Error starting services: {e}")
+        for proc in processes:
+            proc.terminate()
+        sys.exit(1)
+
+
+def run_tests():
+    """Run test suite"""
+    print("🧪 Running tests...")
+
+    # Activate virtual environment
+    if sys.platform == "win32":
+        python_cmd = str(VENV_PATH / "Scripts" / "python")
+    else:
+        python_cmd = str(VENV_PATH / "bin" / "python")
+
+    # Run pytest
+    result = subprocess.run(
+        [python_cmd, "-m", "pytest", "tests/"],
+        cwd=PROJECT_ROOT
+    )
+    return result.returncode
+
+
+def main():
+    """Main CLI entry point"""
+    parser = argparse.ArgumentParser(
+        description="CPRA Filter - Document classification for CPRA requests"
+    )
+
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+
+    # up command
+    up_parser = subparsers.add_parser("up", help="Start the application")
+    up_parser.add_argument(
+        "--production",
+        action="store_true",
+        help="Run in production mode"
+    )
+
+    # test command
+    subparsers.add_parser("test", help="Run test suite")
+
+    # check command
+    subparsers.add_parser("check", help="Check system dependencies")
+
+    args = parser.parse_args()
+
+    if args.command == "up":
+        # Check dependencies first
+        errors = check_dependencies()
+        if errors:
+            print("❌ Dependency check failed:")
+            for error in errors:
+                print(f"   - {error}")
+            sys.exit(1)
+
+        # Start services
+        start_services(production=args.production)
+
+    elif args.command == "test":
+        sys.exit(run_tests())
+
+    elif args.command == "check":
+        errors = check_dependencies()
+        if errors:
+            print("❌ Dependency check failed:")
+            for error in errors:
+                print(f"   - {error}")
+            sys.exit(1)
+        else:
+            print("✅ All dependencies are satisfied")
+
+    else:
+        parser.print_help()
+
+
+if __name__ == "__main__":
+    main()
